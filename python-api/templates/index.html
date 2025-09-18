@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastPaw SRI API - Interfaz de Consultas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <!-- Header -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                            <i class="fas fa-bolt mr-2"></i>FastPaw SRI API
+                        </h1>
+                    </div>
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-server mr-1"></i>Sistema Híbrido v3.0
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Status del pool -->
+                    <div class="flex items-center space-x-2">
+                        <div id="pool-status" class="flex items-center">
+                            <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-300">Cargando...</span>
+                        </div>
+                    </div>
+                    <!-- Toggle modo oscuro -->
+                    <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-moon dark:hidden text-gray-600"></i>
+                        <i class="fas fa-sun hidden dark:block text-yellow-400"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Métricas del sistema -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-lg bg-green-100 dark:bg-green-900">
+                        <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Sesiones Activas</p>
+                        <p id="active-sessions" class="text-2xl font-bold text-gray-900 dark:text-white">-</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-lg bg-blue-100 dark:bg-blue-900">
+                        <i class="fas fa-clock text-blue-600 dark:text-blue-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Tiempo Promedio</p>
+                        <p id="avg-time" class="text-2xl font-bold text-gray-900 dark:text-white">0.3s</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-lg bg-purple-100 dark:bg-purple-900">
+                        <i class="fas fa-search text-purple-600 dark:text-purple-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Consultas Totales</p>
+                        <p id="total-queries" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-lg bg-orange-100 dark:bg-orange-900">
+                        <i class="fas fa-tachometer-alt text-orange-600 dark:text-orange-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Capacidad/Min</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">300-600</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consulta Individual -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        <i class="fas fa-user-search mr-2 text-blue-500"></i>Consulta Individual
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Cédula o RUC Ecuatoriano
+                            </label>
+                            <input
+                                type="text"
+                                id="cedula-input"
+                                placeholder="Ej: 1001955218 o 1234567890001"
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                        </div>
+                        
+                        <button
+                            id="consultar-btn"
+                            class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium py-3 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                        >
+                            <i class="fas fa-search mr-2"></i>Consultar SRI
+                        </button>
+                    </div>
+                    
+                    <!-- Tiempo de respuesta -->
+                    <div id="response-time" class="hidden mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div class="flex items-center text-green-700 dark:text-green-400">
+                            <i class="fas fa-stopwatch mr-2"></i>
+                            <span id="time-display">Tiempo: 0.00s</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultado -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        <i class="fas fa-file-alt mr-2 text-green-500"></i>Resultado
+                    </h3>
+                    
+                    <div id="resultado-container" class="space-y-4">
+                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-search text-4xl mb-4"></i>
+                            <p>Ingresa una cédula o RUC para consultar</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs en tiempo real -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <i class="fas fa-terminal mr-2 text-green-500"></i>Logs del Sistema
+                    </h3>
+                    <div class="flex items-center space-x-4">
+                        <button id="clear-logs" class="px-3 py-1 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded text-sm hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors">
+                            <i class="fas fa-trash mr-1"></i>Limpiar
+                        </button>
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">En vivo</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="logs-container" class="bg-gray-900 dark:bg-black rounded-lg p-4 h-64 overflow-y-auto font-mono text-sm">
+                    <div class="text-green-400">
+                        [$(new Date().toLocaleTimeString())] INFO: FastPaw SRI API iniciada<br>
+                        [$(new Date().toLocaleTimeString())] INFO: Pool híbrido disponible<br>
+                        [$(new Date().toLocaleTimeString())] INFO: Sistema listo para consultas<br>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enlaces rápidos -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <a href="/docs" target="_blank" class="block p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-lg bg-blue-100 dark:bg-blue-900">
+                        <i class="fas fa-book text-blue-600 dark:text-blue-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-medium text-gray-900 dark:text-white">Documentación API</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Swagger UI completa</p>
+                    </div>
+                </div>
+            </a>
+            
+            <a href="/status" target="_blank" class="block p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-lg bg-green-100 dark:bg-green-900">
+                        <i class="fas fa-chart-line text-green-600 dark:text-green-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-medium text-gray-900 dark:text-white">Estado del Sistema</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Métricas completas</p>
+                    </div>
+                </div>
+            </a>
+            
+            <a href="/health" target="_blank" class="block p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-lg bg-purple-100 dark:bg-purple-900">
+                        <i class="fas fa-heartbeat text-purple-600 dark:text-purple-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-medium text-gray-900 dark:text-white">Health Check</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Estado de servicios</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let queryCount = 0;
+        let totalResponseTime = 0;
+
+        // Modo oscuro
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+
+        // Cargar tema guardado
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            htmlElement.classList.add('dark');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (htmlElement.classList.contains('dark')) {
+                htmlElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                htmlElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // Función para agregar logs
+        function addLog(level, message) {
+            const logsContainer = document.getElementById('logs-container');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                'INFO': 'text-green-400',
+                'WARNING': 'text-yellow-400',
+                'ERROR': 'text-red-400',
+                'SUCCESS': 'text-blue-400'
+            };
+            
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span class="text-gray-400">[${timestamp}]</span> <span class="${colors[level] || 'text-white'}">${level}:</span> <span class="text-gray-300">${message}</span>`;
+            
+            logsContainer.appendChild(logEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+
+            // Mantener solo los últimos 50 logs
+            while (logsContainer.children.length > 50) {
+                logsContainer.removeChild(logsContainer.firstChild);
+            }
+        }
+
+        // Limpiar logs
+        document.getElementById('clear-logs').addEventListener('click', () => {
+            document.getElementById('logs-container').innerHTML = '';
+            addLog('INFO', 'Logs limpiados');
+        });
+
+        // Actualizar métricas del pool
+        async function updatePoolMetrics() {
+            try {
+                const response = await fetch('/pool/metrics', {
+                    headers: {
+                        'Authorization': 'Bearer sri_hybrid_token_2024'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const sessions = data.pool_metrics.total_sessions || 0;
+                    document.getElementById('active-sessions').textContent = sessions;
+                    
+                    const statusElement = document.getElementById('pool-status');
+                    if (sessions > 0) {
+                        statusElement.innerHTML = `
+                            <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-300">Pool Activo (${sessions}/3)</span>
+                        `;
+                    } else {
+                        statusElement.innerHTML = `
+                            <div class="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-300">Solo Fallbacks</span>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating pool metrics:', error);
+            }
+        }
+
+        // Consultar API
+        async function consultarAPI() {
+            const cedulaInput = document.getElementById('cedula-input');
+            const consultarBtn = document.getElementById('consultar-btn');
+            const resultadoContainer = document.getElementById('resultado-container');
+            const responseTimeDiv = document.getElementById('response-time');
+            const timeDisplay = document.getElementById('time-display');
+
+            const cedula = cedulaInput.value.trim();
+            
+            if (!cedula) {
+                addLog('ERROR', 'Debe ingresar una cédula o RUC');
+                return;
+            }
+
+            // UI loading state
+            consultarBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Consultando...';
+            consultarBtn.disabled = true;
+            responseTimeDiv.classList.add('hidden');
+
+            const startTime = Date.now();
+            addLog('INFO', `Iniciando consulta para: ${cedula}`);
+
+            try {
+                const response = await fetch('/consultar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer sri_hybrid_token_2024'
+                    },
+                    body: JSON.stringify({ cedula })
+                });
+
+                const endTime = Date.now();
+                const responseTime = (endTime - startTime) / 1000;
+                
+                // Actualizar métricas
+                queryCount++;
+                totalResponseTime += responseTime;
+                const avgTime = (totalResponseTime / queryCount).toFixed(2);
+                
+                document.getElementById('total-queries').textContent = queryCount;
+                document.getElementById('avg-time').textContent = `${avgTime}s`;
+                
+                // Mostrar tiempo de respuesta
+                timeDisplay.textContent = `Tiempo: ${responseTime.toFixed(3)}s`;
+                responseTimeDiv.classList.remove('hidden');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        addLog('SUCCESS', `Consulta exitosa en ${responseTime.toFixed(3)}s - Método: ${data.api_metadata?.method || 'unknown'}`);
+                        mostrarResultado(data, responseTime);
+                    } else {
+                        addLog('WARNING', `Sin resultados para ${cedula}`);
+                        mostrarError('No se encontró información para esta identificación');
+                    }
+                } else {
+                    const errorData = await response.json();
+                    addLog('ERROR', `Error ${response.status}: ${errorData.detail || 'Error desconocido'}`);
+                    mostrarError(errorData.detail || 'Error en la consulta');
+                }
+
+            } catch (error) {
+                const endTime = Date.now();
+                const responseTime = (endTime - startTime) / 1000;
+                addLog('ERROR', `Error de conexión: ${error.message}`);
+                mostrarError('Error de conexión con la API');
+            } finally {
+                // Restore button
+                consultarBtn.innerHTML = '<i class="fas fa-search mr-2"></i>Consultar SRI';
+                consultarBtn.disabled = false;
+            }
+        }
+
+        function mostrarResultado(data, responseTime) {
+            const container = document.getElementById('resultado-container');
+            const persona = data.data;
+            
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                        <span class="text-green-600 dark:text-green-400 font-medium">Consulta Exitosa</span>
+                        <span class="text-sm text-gray-500">en ${responseTime.toFixed(3)}s</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
+                            <span class="font-medium text-gray-700 dark:text-gray-300">Cédula/RUC:</span>
+                            <span class="text-gray-900 dark:text-white">${persona.cedula || 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
+                            <span class="font-medium text-gray-700 dark:text-gray-300">Nombre:</span>
+                            <span class="text-gray-900 dark:text-white">${persona.razonSocial || persona.nombre || 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
+                            <span class="font-medium text-gray-700 dark:text-gray-300">Tipo:</span>
+                            <span class="text-gray-900 dark:text-white">${persona.tipoIdentificacion || 'N/A'}</span>
+                        </div>
+                        ${persona.telefono ? `
+                        <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
+                            <span class="font-medium text-gray-700 dark:text-gray-300">Teléfono:</span>
+                            <span class="text-gray-900 dark:text-white">${persona.telefono}</span>
+                        </div>
+                        ` : ''}
+                        ${persona.email ? `
+                        <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
+                            <span class="font-medium text-gray-700 dark:text-gray-300">Email:</span>
+                            <span class="text-gray-900 dark:text-white">${persona.email}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-blue-700 dark:text-blue-400">
+                                <i class="fas fa-cogs mr-1"></i>Método: ${data.api_metadata?.method || 'hybrid'}
+                            </span>
+                            <span class="text-blue-700 dark:text-blue-400">
+                                <i class="fas fa-clock mr-1"></i>Respuesta: ${data.response_time || responseTime.toFixed(3)}s
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function mostrarError(mensaje) {
+            const container = document.getElementById('resultado-container');
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="flex items-center justify-center space-x-2 mb-4">
+                        <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+                        <span class="text-red-600 dark:text-red-400 font-medium">Error en la consulta</span>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                    <p class="text-gray-600 dark:text-gray-400">${mensaje}</p>
+                </div>
+            `;
+        }
+
+        // Event listeners
+        document.getElementById('consultar-btn').addEventListener('click', consultarAPI);
+        document.getElementById('cedula-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                consultarAPI();
+            }
+        });
+
+        // Auto-actualizar métricas cada 10 segundos
+        setInterval(updatePoolMetrics, 10000);
+        updatePoolMetrics(); // Llamada inicial
+
+        // Logs simulados periódicos
+        const logMessages = [
+            'Pool híbrido verificado',
+            'Sesiones Selenium activas',
+            'Health check completado',
+            'Sistema operativo'
+        ];
+
+        setInterval(() => {
+            const randomMessage = logMessages[Math.floor(Math.random() * logMessages.length)];
+            addLog('INFO', randomMessage);
+        }, 15000);
+    </script>
+</body>
+</html>

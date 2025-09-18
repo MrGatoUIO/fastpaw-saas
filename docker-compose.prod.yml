@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  python-api:
+    build: ./python-api
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - API_SECRET_KEY=${API_SECRET_KEY}
+      - ENVIRONMENT=production
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  nodejs-web:
+    build: ./nodejs-web
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - PYTHON_API_URL=${PYTHON_API_URL}
+      - NODE_ENV=production
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  react-frontend:
+    build: ./react-frontend
+    environment:
+      - REACT_APP_API_URL=/api
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl  # Para SSL
+    ports:
+      - "80:80"
+      - "443:443"  # HTTPS
+    depends_on:
+      - react-frontend
+      - nodejs-web
+      - python-api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

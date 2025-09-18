@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: fastpaw_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5330:5432"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: fastpaw_redis
+    expose:
+      - "6379"
+    restart: unless-stopped
+
+  python-api:
+    build: 
+      context: ./python-api
+      dockerfile: Dockerfile
+    container_name: fastpaw_python_api
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - API_SECRET_KEY=${API_SECRET_KEY}
+      - ENVIRONMENT=development
+      - DISPLAY=:99
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8547:8000"  # Puerto externo 8547, interno sigue siendo 8000
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - ./python-api:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  nodejs-web:
+    build:
+      context: ./nodejs-web
+      dockerfile: Dockerfile.dev  # ← Usar Dockerfile de desarrollo
+    container_name: fastpaw_nodejs_web
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - PYTHON_API_URL=${PYTHON_API_URL}
+      - NODE_ENV=development
+    depends_on:
+      - postgres
+    expose:
+      - "3001"
+    restart: unless-stopped
+    volumes:
+      - ./nodejs-web:/app
+      - /app/node_modules
+
+  react-frontend:
+    build:
+      context: ./react-frontend
+      dockerfile: Dockerfile.dev  # ← Usar Dockerfile de desarrollo
+    container_name: fastpaw_react_frontend
+    environment:
+      - REACT_APP_API_URL=/api
+      - WATCHPACK_POLLING=true
+      - FAST_REFRESH=true
+      - CHOKIDAR_USEPOLLING=true  # Para hot reload en Docker
+    expose:
+      - "3000"
+    restart: unless-stopped
+    depends_on:
+      - nodejs-web
+    volumes:
+      - ./react-frontend/src:/app/src      # Mapear código fuente
+      - ./react-frontend/public:/app/public
+      - /app/node_modules                   # Excluir node_modules
+    
+  nginx:
+    image: nginx:alpine
+    container_name: fastpaw_nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+    depends_on:
+      - react-frontend
+      - nodejs-web
+      - python-api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: fastpaw-network

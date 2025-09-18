@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FastPaw SRI API - Documentación</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* Variables personalizadas */
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1e40af;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --darker: #111827;
+        }
+
+        /* Reset y base */
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Header moderno */
+        .modern-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 8px 32px rgba(251, 191, 36, 0.3);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle, .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .theme-toggle:hover, .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Contenedor principal */
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Card glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Override Swagger UI styles */
+        .swagger-ui {
+            background: transparent !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        .swagger-ui .topbar {
+            display: none !important;
+        }
+
+        .swagger-ui .info {
+            margin: 0 0 2rem 0 !important;
+        }
+
+        .swagger-ui .info .title {
+            display: none !important;
+        }
+
+        .swagger-ui .info .description {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 1.1rem !important;
+            line-height: 1.6 !important;
+        }
+
+        .swagger-ui .scheme-container {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 12px !important;
+            padding: 1rem !important;
+            margin: 1rem 0 !important;
+        }
+
+        .swagger-ui .opblock-tag {
+            color: white !important;
+            font-size: 1.2rem !important;
+            font-weight: 600 !important;
+            margin: 2rem 0 1rem 0 !important;
+        }
+
+        .swagger-ui .opblock {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 16px !important;
+            margin: 1rem 0 !important;
+            backdrop-filter: blur(10px) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .swagger-ui .opblock:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        .swagger-ui .opblock.opblock-post {
+            border-left: 4px solid var(--success) !important;
+        }
+
+        .swagger-ui .opblock.opblock-get {
+            border-left: 4px solid var(--primary) !important;
+        }
+
+        .swagger-ui .opblock-summary {
+            background: transparent !important;
+            padding: 1.5rem !important;
+        }
+
+        .swagger-ui .opblock-summary-method {
+            background: linear-gradient(135deg, var(--success), #059669) !important;
+            color: white !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            min-width: 80px !important;
+            text-align: center !important;
+        }
+
+        .swagger-ui .opblock.opblock-get .opblock-summary-method {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+        }
+
+        .swagger-ui .opblock-summary-path {
+            color: white !important;
+            font-weight: 500 !important;
+            font-size: 1rem !important;
+        }
+
+        .swagger-ui .opblock-summary-description {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .swagger-ui .btn.execute {
+            background: linear-gradient(135deg, var(--success), #059669) !important;
+            border: none !important;
+            border-radius: 12px !important;
+            padding: 0.75rem 2rem !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        .swagger-ui .btn.execute:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4) !important;
+        }
+
+        .swagger-ui .btn.try-out__btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+            border: none !important;
+            border-radius: 12px !important;
+            color: white !important;
+            font-weight: 600 !important;
+            padding: 0.5rem 1.5rem !important;
+        }
+
+        .swagger-ui table {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+        }
+
+        .swagger-ui table thead tr th {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            font-weight: 600 !important;
+            padding: 1rem !important;
+        }
+
+        .swagger-ui table tbody tr td {
+            color: rgba(255, 255, 255, 0.9) !important;
+            padding: 1rem !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .swagger-ui .parameter__name {
+            color: white !important;
+            font-weight: 600 !important;
+        }
+
+        .swagger-ui .parameter__type {
+            color: var(--warning) !important;
+            font-weight: 500 !important;
+        }
+
+        .swagger-ui input, .swagger-ui textarea, .swagger-ui select {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 8px !important;
+            color: white !important;
+            padding: 0.75rem !important;
+        }
+
+        .swagger-ui input::placeholder, .swagger-ui textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        .swagger-ui .response-col_status {
+            color: white !important;
+            font-weight: 600 !important;
+        }
+
+        .swagger-ui .response-col_description__inner {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        /* Efectos especiales */
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            50% { transform: translateY(-100px) rotate(180deg); opacity: 1; }
+        }
+
+        /* Modo oscuro */
+        .dark body {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        }
+
+        .dark .glass-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .main-container {
+                padding: 0 1rem;
+            }
+            
+            .glass-card {
+                padding: 1rem;
+                border-radius: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Partículas flotantes -->
+    <div class="floating-particles" id="particles"></div>
+
+    <!-- Header moderno -->
+    <header class="modern-header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                <div>
+                    <div>FastPaw SRI API</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8; font-weight: normal;">
+                        Documentación Interactiva v3.0
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <a href="/" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver al Dashboard
+                </a>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                    <span id="theme-text">Modo Oscuro</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <div class="main-container">
+        <div class="glass-card">
+            <!-- Título personalizado -->
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h1 style="color: white; font-size: 2.5rem; margin: 0; font-weight: bold;">
+                    API REST Híbrida
+                </h1>
+                <p style="color: rgba(255, 255, 255, 0.8); font-size: 1.1rem; margin: 0.5rem 0;">
+                    Sistema ultrarrápido Selenium + aiohttp para consultas SRI Ecuador
+                </p>
+                <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
+                    <div style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 0.5rem 1rem; border-radius: 25px; font-size: 0.9rem; font-weight: 600;">
+                        <i class="fas fa-bolt" style="margin-right: 0.5rem;"></i>
+                        Tiempo: 0.1-0.3s
+                    </div>
+                    <div style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 0.5rem 1rem; border-radius: 25px; font-size: 0.9rem; font-weight: 600;">
+                        <i class="fas fa-server" style="margin-right: 0.5rem;"></i>
+                        Pool Híbrido
+                    </div>
+                    <div style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; padding: 0.5rem 1rem; border-radius: 25px; font-size: 0.9rem; font-weight: 600;">
+                        <i class="fas fa-shield-alt" style="margin-right: 0.5rem;"></i>
+                        Anti-detección
+                    </div>
+                </div>
+            </div>
+
+            <!-- Swagger UI -->
+            <div id="swagger-ui"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+    
+    <script>
+        // Crear partículas flotantes
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 3 + 4) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Inicializar Swagger UI
+        window.onload = function() {
+            createParticles();
+            
+            const ui = SwaggerUIBundle({
+                url: '/openapi.json',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                defaultModelsExpandDepth: 2,
+                defaultModelExpandDepth: 2,
+                docExpansion: "list",
+                filter: true,
+                showExtensions: true,
+                showCommonExtensions: true,
+                tryItOutEnabled: true,
+                displayRequestDuration: true,
+                requestInterceptor: (request) => {
+                    // Auto-agregar token para endpoints protegidos
+                    if (request.url.includes('/consultar') || 
+                        request.url.includes('/pool/') || 
+                        request.url.includes('/debug/')) {
+                        request.headers['Authorization'] = 'Bearer sri_hybrid_token_2024';
+                    }
+                    return request;
+                },
+                responseInterceptor: (response) => {
+                    // Agregar efectos visuales en respuestas exitosas
+                    if (response.status >= 200 && response.status < 300) {
+                        setTimeout(() => {
+                            const executeBtn = document.querySelector('.btn.execute');
+                            if (executeBtn) {
+                                executeBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                                executeBtn.innerHTML = '<i class="fas fa-check"></i> Exitoso';
+                                setTimeout(() => {
+                                    executeBtn.innerHTML = 'Ejecutar';
+                                }, 2000);
+                            }
+                        }, 100);
+                    }
+                    return response;
+                }
+            });
+        };
+
+        // Toggle de tema
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                themeIcon.className = 'fas fa-moon';
+                themeText.textContent = 'Modo Oscuro';
+                localStorage.setItem('docs-theme', 'light');
+            } else {
+                body.classList.add('dark');
+                themeIcon.className = 'fas fa-sun';
+                themeText.textContent = 'Modo Claro';
+                localStorage.setItem('docs-theme', 'dark');
+            }
+        }
+
+        // Cargar tema guardado
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('docs-theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark');
+                document.getElementById('theme-icon').className = 'fas fa-sun';
+                document.getElementById('theme-text').textContent = 'Modo Claro';
+            }
+        });
+
+        // Efectos adicionales al hacer clic en endpoints
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.opblock-summary')) {
+                const opblock = e.target.closest('.opblock');
+                opblock.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    opblock.style.transform = '';
+                }, 200);
+            }
+        });
+    </script>
+</body>
+</html>
